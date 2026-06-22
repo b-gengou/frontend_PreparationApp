@@ -1,0 +1,32 @@
+
+/* Couleurs daltonien-friendly */
+.daltonien-success {
+  color: #20c997 !important; /* Vert accessible */
+}
+
+.daltonien-error {
+  color: #dc3545 !important; /* Rouge accessible (déjà ok pour la plupart des daltoniens) */
+}
+
+.daltonien-info {
+  color: #17a2b8 !important; /* Bleu clair */
+}
+
+/* Améliore le contraste pour les daltoniens */
+.high-contrast {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+/* Style pour les liens accessibles */
+a.daltonien-link {
+  color: #007bff !important;
+  text-decoration: underline !important;
+}
+
+/* Style pour les boutons accessibles */
+.btn-daltonien {
+  background-color: #6f42c1 !important; /* Violet */
+  color: white !important;
+  border: none !important;
+}

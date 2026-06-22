@@ -1,0 +1,191 @@
+/* Palette de couleurs et règles d'accessibilité centralisées pour
+ * PreparationApp, en particulier pour les personnes daltoniennes
+ * (principalement prévue pour la confusion rouge/vert).
+ * Le principe directeur : on ne distingue jamais une information par la
+ * couleur seule. Chaque état (succès, erreur, avertissement, info) est
+ * accompagné d'une icône et/ou d'un texte explicite, en plus de la couleur.
+ * C'est le critère WCAG 1.4.1 ("Use of Color").
+ * Donc utilisation de : bleu pour le succès/info, orange pour l'avertissement,
+ * un rouge foncé à fort contraste et tjrs accompagné d'une icône
+ * pour l'erreur (le rouge seul n'est jamais le seul signal). */
+
+:root {
+  /* Palette sémantique. Ces variables remplacent les couleurs Bootstrap
+   * par défaut (--bs-success, --bs-danger...) dans toute l'application,
+   * pour garder une seule source de vérité. */
+
+  /* Couleur principale de marque (boutons primaires, liens, navbar). */
+  --color-brand: #0d4f8b;
+  --color-brand-dark: #073a66;
+
+  /* Succès : bleu-vert (teal), jamais vert pur, pour rester distinguable
+     d'un éventuel rouge à proximité même en cas de daltonisme. */
+  --color-success: #0f6e56;
+  --color-success-bg: #e1f5ee;
+  --color-success-border: #5dcaa5;
+
+  /* Erreur : rouge à forte luminosité contrastée, tjrs accompagné
+     d'une icône (⚠ ou ✕) dans les composants, jamais seul. */
+  --color-danger: #8c1d1d;
+  --color-danger-bg: #fcebeb;
+  --color-danger-border: #e24b4a;
+
+  /* Avertissement : orange, bien distinct du rouge et du vert  */
+  --color-warning: #854f0b;
+  --color-warning-bg: #faeeda;
+  --color-warning-border: #ef9f27;
+
+  /* Information : bleu clair, jamais confondu avec le succès teal
+     grâce à une teinte clairement différente (bleu vs vert-bleu). */
+  --color-info: #0c447c;
+  --color-info-bg: #e6f1fb;
+  --color-info-border: #378add;
+
+  /* Neutre (texte secondaire, bordures discrètes). */
+  --color-neutral-text: #444441;
+  --color-neutral-border: #b4b2a9;
+
+  /* Contraste minimum garanti (WCAG AA = ratio 4.5:1 pour le texte normal).
+   * Toutes les couleurs, cf. ci-dessus, ont été choisies pour atteindre ce ratio
+   * sur fond blanc. Il ne faut jamais alléger ces teintes sans revérifier le contraste
+   * (ex. avec l'outil WebAIM Contrast Checker). */
+}
+
+/* Classes utilitaires d'état, utilisées à la place des classes Bootstrap
+ * "text-success" / "text-danger" / "bg-success" / "bg-danger", qui par
+ * défaut, dans Bootstrap, utilisent la paire rouge/vert. */
+
+.app-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--border-radius-md, 8px);
+  border: 1px solid transparent;
+  font-weight: 500;
+}
+
+.app-alert-icon {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.app-alert-success {
+  background-color: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
+}
+
+.app-alert-danger {
+  background-color: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.app-alert-warning {
+  background-color: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
+}
+
+.app-alert-info {
+  background-color: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: var(--color-info);
+}
+
+/* Badges de rôle (Administrateur / Formateur). Distingués par une forme de
+ * texte différente en plus de la couleur, pour rester lisibles même en
+ * niveaux de gris (test de base d'accessibilité). */
+
+.app-badge-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-badge-role-admin {
+  background-color: var(--color-brand);
+  color: #ffffff;
+}
+
+.app-badge-role-formateur {
+  background-color: var(--color-neutral-border);
+  color: var(--color-neutral-text);
+}
+
+/* Focus visible renforcé : indispensable pour la navigation au clavier
+ * (encore un critère d'accessibilité, non spécifique au daltonisme mais
+ * complémentaire). Le contour de 3px à fort contraste reste visible même
+ * en cas de daltonisme, contrairement au focus par défaut très fin de
+ * certains navigateurs. */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Mode "contraste élevé", activable par la personne (cf. composant
+ * AccessibilityToggle). Renforce les bordures et fonce le texte, utile pour
+ * le daltonisme sévère combiné à une baisse de vue, ou en cas de
+ * faible luminosité ambiante (cas plus fréquent).*/
+
+body.high-contrast {
+  --color-neutral-text: #000000;
+}
+
+body.high-contrast .card,
+body.high-contrast .table,
+body.high-contrast .form-control,
+body.high-contrast .form-select {
+  border-width: 2px !important;
+  border-color: #000000 !important;
+}
+
+body.high-contrast .app-alert {
+  border-width: 2px;
+}
+
+/* * Responsive : ajustements globaux pour mobile et tablette, complément
+ * des classes Bootstrap déjà responsive (col-*, table-responsive, etc.). */
+
+/* Mobile (< 576px) : agrandit légèrement les zones cliquables, pour
+   rester confortable au doigt (cible tactile recommandée : 44x44px min). */
+   
+@media (max-width: 575.98px) {
+  .btn {
+    min-height: 44px;
+  }
+
+  /* Les boutons d'action en tableau (Modifier/Supprimer) passent en pleine
+     largeur et s'empilent verticalement plutôt que de se compresser
+     horizontalement : ce qui rend les rends illisibles. */
+	 
+  .app-table-actions {
+    flex-direction: column;
+  }
+  .app-table-actions .btn {
+    width: 100%;
+  }
+
+  h1, .h1 { font-size: 1.5rem; }
+  h2, .h2 { font-size: 1.3rem; }
+}
+
+/* Tablette (576px à 991.98px) : ajustements intermédiaires. */
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .app-table-actions {
+    flex-wrap: wrap;
+  }
+}

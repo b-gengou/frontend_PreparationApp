@@ -1,7 +1,7 @@
 /** Affiche la liste des préparations (GET /api/preparations), avec un badge
  * de statut, le formateur assigné, et des actions de modification/suppression
  * visibles uniquement pour le créateur de la préparation ou un administrateur
- * Il s'agit très exactement de la même règle que celle appliquée côté backend
+ * Il s'agit de la même règle que celle appliquée côté backend
  * (PreparationsController.cs). Cacher le bouton ici n'est prévu que pour le confort
  * visuel : la vraie sécurité reste vérifiée par le backend à chaque requête.
  */
@@ -181,7 +181,7 @@ const PreparationsList: React.FC = () => {
                       {preparation.subject}
                     </Link>
                   </td>
-                  <td>{preparation.formateur?.name ?? `#${preparation.formateurId}`}</td>
+                  <td>{preparation.formateur?.displayName ?? `#${preparation.formateurId}`}</td>
                   <td>{formatDate(preparation.startDate)}</td>
                   <td>{formatDate(preparation.endDate)}</td>
                   <td className="text-center">
@@ -204,7 +204,7 @@ const PreparationsList: React.FC = () => {
                             Modifier
                           </Link>
                           <button
-                            className="btn btn-sm btn-outline-danger"
+                            className="btn btn-sm app-btn-danger"
                             onClick={() => handleDelete(preparation.id)}
                           >
                             Supprimer

@@ -14,6 +14,13 @@ export interface Formateur {
   // (il ne doit jms apparaître dans le frontend après la création).
   role: '1' | '2'; // "1" = administrateur, "2" = formateur
   googleCalendarId: string;
+  // Un compte désactivé (départ de l'entreprise) ne peut plus se
+  // connecter, mais ses données restent visibles partout dans l'app.
+  isActive: boolean;
+  // Nom à afficher tel quel dans l'UI : "Nom" si actif, ou
+  // "Nom (compte désactivé)" sinon. Calculé côté backend
+  // (Formateur.cs, propriété DisplayName) pour rester cohérent partout.
+  displayName: string;
 }
 
 // Donnée envoyée lors de la création d'un formateur par un admin
@@ -103,6 +110,11 @@ export interface Resource {
   createdById: number;
   createdBy?: Formateur;
   createdAt: string;
+  // Renvoyé par GET /api/resources (ResourcesController.cs fait
+  // .Include(r => r.PreparationResources)). Permet de savoir si cette
+  // ressource est déjà liée à telle préparation, pour adapter l'affichage
+  // du bouton "Lier" dans ResourcesList.tsx.
+  preparationResources?: { preparationId: number }[];
 }
 
 // Donnée envoyée lors de la création/modification d'une ressource.

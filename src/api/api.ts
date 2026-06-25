@@ -11,6 +11,13 @@ import axios from 'axios';
 // Doit être - strictement - identique à celle utilisée dans AuthContext.tsx.
 const STORAGE_KEY = 'preparationapp_auth';
 
+// Clef utilisée pour signaler à LoginPage.tsx qu'une déconnexion vient
+// d'être déclenchée automatiquement par cet intercepteur (401), et non
+// par un clic volontaire sur "Se déconnecter". sessionStorage plutôt que
+// localStorage : on veut que ce drapeau disparaisse après affichage du
+// message, pas qu'il persiste entre deux sessions de navigateur.
+const SESSION_EXPIRED_KEY = 'preparationapp_session_expired';
+
 /* Instance Axios configurée pour communiquer avec le backend.
  * - baseURL: URL de base de l'API backend
  * - headers: En-têtes HTTP par défaut pour toutes les requêtes
@@ -41,7 +48,7 @@ api.interceptors.request.use(
           config.headers.Authorization = `Bearer ${token}`;
         }
       } catch {
-        // Contenu corrompu : on n'ajoute pas de token, la requête partira
+        // Contenu corrompu : pas d'ajout de token, la requête partira
         // simplement sans authentification (et échouera côté
         // backend avec un 401 si la route est protégée).
       }
@@ -69,7 +76,18 @@ api.interceptors.response.use(
     // Cela évite qu'elle reste bloquée dans un état "connecté" qui ne
     // fonctionne plus réellement côté backend.
     if (error.response?.status === 401) {
+      // On ne pose le drapeau "session expirée" que si la personne avait
+      // réellement un token enregistré : sinon, un 401 sur la page de
+      // login elle-même (ex: mauvais mot de passe) afficherait à tort
+      // "votre session a expiré" au lieu du vrai message d'erreur du
+      // formulaire de connexion.
+      const hadToken = localStorage.getItem(STORAGE_KEY) !== null;
       localStorage.removeItem(STORAGE_KEY);
+
+      if (hadToken && window.location.pathname !== '/login') {
+        sessionStorage.setItem(SESSION_EXPIRED_KEY, 'true');
+      }
+
       // On utilise window.location plutôt que react-router ici, car ce
       // fichier n'est pas un composant React et n'a pas accès à useNavigate().
       if (window.location.pathname !== '/login') {

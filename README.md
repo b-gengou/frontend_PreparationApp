@@ -45,4 +45,8 @@ PreparationApp/
 ## Liens Utiles
 - [Documentation Backend](./backend_PreparationApp/BACKEND.md)
 - [Documentation Frontend](./frontend_PreparationApp/FRONTEND.md)
+<<<<<<< HEAD
 - [Swagger UI (Développement)](http://localhost:5000/swagger)
+=======
+- [Swagger UI (Développement)](http://localhost:5000/swagger)
+>>>>>>> 42578a516e2f8ba52f393145f876c579e920738c

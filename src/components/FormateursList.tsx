@@ -7,6 +7,7 @@
  
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../api/api';
+import { useAuth } from '../context/AuthContext';
 import type { Formateur } from '../types/models';
 
 
@@ -20,10 +21,23 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
   return <span className="app-badge-role app-badge-role-formateur">Formateur</span>;
 };
 
+// Badge de statut actif/désactivé : texte explicite + couleur, jamais la
+// couleur seule (cohérent avec RoleBadge et la palette accessible).
+const StatusBadge: React.FC<{ isActive: boolean }> = ({ isActive }) => {
+  if (isActive) {
+    return <span className="app-badge-role app-badge-role-formateur">Actif</span>;
+  }
+  return <span className="app-badge-role app-badge-role-admin">Désactivé</span>;
+};
+
 const FormateursList: React.FC = () => {
+  const { isAdmin } = useAuth();
   const [formateurs, setFormateurs] = useState<Formateur[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  // Id. du formateur en cours de (dés)activation, pour désactiver son
+  // bouton pendant l'appel réseau et éviter un double clic.
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   // useCallback : isole la fonction de récupération pour pouvoir la
   // rappeler depuis le bouton "Réessayer" sans recharger toute la page
@@ -62,6 +76,27 @@ const FormateursList: React.FC = () => {
     fetchFormateurs();
   }, [fetchFormateurs]);
 
+  // Désactive ou réactive le compte d'un formateur (admin uniquement).
+  // Appelle PUT /api/formateurs/{id}/deactivate ou /reactivate selon le
+  // statut actuel (voir FormateursController.cs).
+  const handleToggleActive = async (formateur: Formateur) => {
+    const action = formateur.isActive ? 'deactivate' : 'reactivate';
+    setTogglingId(formateur.id);
+    setError(null);
+    try {
+      await api.put(`/formateurs/${formateur.id}/${action}`);
+      // On rafraîchit la liste pour refléter le nouveau statut et le
+      // displayName mis à jour (ex: "(compte désactivé)" qui apparaît
+      // ou disparaît).
+      await fetchFormateurs();
+    } catch (err: any) {
+      console.error(`Erreur lors de la ${action === 'deactivate' ? 'désactivation' : 'réactivation'}:`, err);
+      setError(err.response?.data?.Error || `Impossible de ${action === 'deactivate' ? 'désactiver' : 'réactiver'} ce compte.`);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center p-4">
@@ -83,7 +118,7 @@ const FormateursList: React.FC = () => {
           <div>
             {error}
             <div className="mt-2">
-              <button onClick={fetchFormateurs} className="btn btn-sm btn-outline-danger">
+              <button onClick={fetchFormateurs} className="btn btn-sm app-btn-danger">
                 Réessayer
               </button>
             </div>
@@ -113,14 +148,18 @@ const FormateursList: React.FC = () => {
                 <th scope="col">Nom</th>
                 <th scope="col">Email</th>
                 <th scope="col" className="text-center">Rôle</th>
+                <th scope="col" className="text-center">Statut</th>
                 <th scope="col" className="text-center">Google Calendar</th>
+                {isAdmin && <th scope="col" className="text-center">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {formateurs.map((formateur) => (
                 <tr key={formateur.id}>
                   <td className="text-center">{formateur.id}</td>
-                  <td>{formateur.name}</td>
+                  {/* displayName : "Nom" si actif, "Nom (compte désactivé)"
+                      sinon — calculé côté backend, voir Formateur.cs. */}
+                  <td>{formateur.displayName}</td>
                   <td>
                     <a href={`mailto:${formateur.email}`} className="text-decoration-none">
                       {formateur.email}
@@ -130,10 +169,26 @@ const FormateursList: React.FC = () => {
                     <RoleBadge role={formateur.role} />
                   </td>
                   <td className="text-center">
+                    <StatusBadge isActive={formateur.isActive} />
+                  </td>
+                  <td className="text-center">
                     {formateur.googleCalendarId || (
                       <span className="text-secondary">Non spécifié</span>
                     )}
                   </td>
+                  {isAdmin && (
+                    <td className="text-center">
+                      <button
+                        className={formateur.isActive ? 'btn btn-sm app-btn-warning' : 'btn btn-sm app-btn-success'}
+                        onClick={() => handleToggleActive(formateur)}
+                        disabled={togglingId === formateur.id}
+                      >
+                        {togglingId === formateur.id
+                          ? '...'
+                          : formateur.isActive ? 'Désactiver' : 'Réactiver'}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

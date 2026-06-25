@@ -24,6 +24,10 @@ const ResourcesList: React.FC = () => {
   // (qui filtre par formateurId/date/type), donc utilité seulement
   // pour le filtrage affiché côté frontend, en complément.
   const [searchParams] = useSearchParams();
+  // Id. de la préparation d'origine si on arrive depuis PreparationDetails.tsx
+  // via "/resources?preparationId=...". Calculé tôt car utilisé par
+  // plusieurs fonctions ci-dessous (handleLink, isLinked).
+  const preparationId = searchParams.get('preparationId');
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [formateurs, setFormateurs] = useState<Formateur[]>([]);
@@ -34,6 +38,12 @@ const ResourcesList: React.FC = () => {
   const [type, setType] = useState<string>('');
   const [formateurId, setFormateurId] = useState<string>('');
   const [date, setDate] = useState<string>('');
+
+  // Id. de la ressource en cours de liaison (pour désactiver son bouton
+  // pendant l'appel réseau et éviter un double clic).
+  const [linkingId, setLinkingId] = useState<number | null>(null);
+  // Message de confirmation affiché après une liaison réussie.
+  const [linkSuccess, setLinkSuccess] = useState<string | null>(null);
 
   // Récupère la liste des formateurs pour le filtre déroulant.
   useEffect(() => {
@@ -91,12 +101,38 @@ const ResourcesList: React.FC = () => {
     return isAdmin || resource.createdById === user?.id;
   };
 
-  // Filtre d'affichage local par préparation, si arrivé ici depuis
-  // le lien "Voir le catalogue" de PreparationDetails.tsx. La liaison
-  // préparation <--> ressource n'est pas directement renvoyée par
-  // GET /api/resources, ce filtre reste informatif : le lien est informatif,
-  // pas un vrai filtre serveur.
-  const preparationId = searchParams.get('preparationId');
+  // Lie la ressource cliquée à la préparation d'origine (celle passée en
+  // query param ?preparationId=... depuis PreparationDetails.tsx).
+  // Appelle POST /api/resources/{resourceId}/link/{preparationId}
+  // (voir ResourcesController.cs, LinkToPreparation).
+  const handleLink = async (resourceId: number) => {
+    if (!preparationId) return;
+    setLinkingId(resourceId);
+    setError(null);
+    setLinkSuccess(null);
+    try {
+      await api.post(`/resources/${resourceId}/link/${preparationId}`);
+      setLinkSuccess('Ressource liée à la préparation avec succès.');
+      // On rafraîchit la liste pour que le bouton "Lier" devienne
+      // "Déjà liée" grâce aux preparationResources mis à jour.
+      await fetchResources();
+    } catch (err: any) {
+      console.error('Erreur lors de la liaison:', err);
+      setError(err.response?.data?.Error || 'Impossible de lier cette ressource à la préparation.');
+    } finally {
+      setLinkingId(null);
+    }
+  };
+
+  // Indique si la ressource est déjà liée à la préparation d'origine,
+  // pour afficher "Déjà liée" plutôt que de permettre un doublon
+  // (le backend renvoie une erreur 400 dans ce cas).
+  const isLinked = (resource: Resource): boolean => {
+    if (!preparationId) return false;
+    return resource.preparationResources?.some(
+      (pr) => pr.preparationId === Number(preparationId)
+    ) ?? false;
+  };
 
   return (
     <div className="container mt-4">
@@ -110,8 +146,15 @@ const ResourcesList: React.FC = () => {
       {preparationId && (
         <div className="app-alert app-alert-info mb-3" role="status">
           <span className="app-alert-icon" aria-hidden="true">ℹ</span>
-          Affichage du catalogue complet. La liaison entre une ressource et
-          la préparation #{preparationId} se gère depuis la fiche de la ressource.
+          Affichage du catalogue complet. Cliquez sur « Lier à cette préparation »
+          sur une ressource pour l'associer à la préparation #{preparationId}.
+        </div>
+      )}
+
+      {linkSuccess && (
+        <div className="app-alert app-alert-success mb-3" role="status">
+          <span className="app-alert-icon" aria-hidden="true">✓</span>
+          {linkSuccess}
         </div>
       )}
 
@@ -216,8 +259,27 @@ const ResourcesList: React.FC = () => {
                     Ouvrir la ressource ↗
                   </a>
                   <p className="text-secondary small mb-3 mt-auto">
-                    Ajoutée par {resource.createdBy?.name ?? `#${resource.createdById}`}
+                    Ajoutée par {resource.createdBy?.displayName ?? `#${resource.createdById}`}
                   </p>
+
+                  {/* Bouton de liaison : visible uniquement si on arrive depuis
+                      la fiche d'une préparation (?preparationId=...). */}
+                  {preparationId && (
+                    isLinked(resource) ? (
+                      <button className="btn btn-sm app-btn-success-solid mb-2" disabled>
+                        ✓ Déjà liée à cette préparation
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-sm app-btn-success mb-2"
+                        onClick={() => handleLink(resource.id)}
+                        disabled={linkingId === resource.id}
+                      >
+                        {linkingId === resource.id ? 'Liaison...' : 'Lier à cette préparation'}
+                      </button>
+                    )
+                  )}
+
                   {canModify(resource) && (
                     <div className="d-flex gap-2 app-table-actions">
                       <Link
@@ -227,7 +289,7 @@ const ResourcesList: React.FC = () => {
                         Modifier
                       </Link>
                       <button
-                        className="btn btn-sm btn-outline-danger flex-fill"
+                        className="btn btn-sm app-btn-warning flex-fill"
                         onClick={() => handleDelete(resource.id)}
                       >
                         Supprimer

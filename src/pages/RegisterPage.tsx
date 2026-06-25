@@ -57,8 +57,9 @@ const RegisterPage: React.FC = () => {
               <h1 className="h3 text-center mb-4">Créer un compte</h1>
 
               {error && (
-                <div className="alert alert-danger" role="alert">
-                  <strong>⚠ Erreur : </strong>{error}
+                <div className="app-alert app-alert-danger" role="alert">
+                  <span className="app-alert-icon" aria-hidden="true">⚠</span>
+                  <div><strong>Erreur : </strong>{error}</div>
                 </div>
               )}
 

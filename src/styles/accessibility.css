@@ -1,13 +1,11 @@
 /* Palette de couleurs et règles d'accessibilité centralisées pour
- * PreparationApp, en particulier pour les personnes daltoniennes
- * (principalement prévue pour la confusion rouge/vert).
- * Le principe directeur : on ne distingue jamais une information par la
- * couleur seule. Chaque état (succès, erreur, avertissement, info) est
- * accompagné d'une icône et/ou d'un texte explicite, en plus de la couleur.
- * C'est le critère WCAG 1.4.1 ("Use of Color").
- * Donc utilisation de : bleu pour le succès/info, orange pour l'avertissement,
- * un rouge foncé à fort contraste et tjrs accompagné d'une icône
- * pour l'erreur (le rouge seul n'est jamais le seul signal). */
+ * PreparationApp.
+ * RÈGLE STRICTE DEMANDÉE : aucune couleur rouge ni verte nulle part
+ * dans l'application, même seule, même accompagnée d'une icône et d'un
+ * texte explicite. Ce n'est pas la version "a minima" du WCAG 1.4.1 (qui
+ * tolère une couleur seule si un texte/icône l'accompagne) : ici, le
+ * rouge et le vert sont bannis purement et simplement de la palette,
+ * remplacés par du bleu, de l'orange et du gris-anthracite foncé. */
 
 :root {
   /* Palette sémantique. Ces variables remplacent les couleurs Bootstrap
@@ -18,25 +16,28 @@
   --color-brand: #0d4f8b;
   --color-brand-dark: #073a66;
 
-  /* Succès : bleu-vert (teal), jamais vert pur, pour rester distinguable
-     d'un éventuel rouge à proximité même en cas de daltonisme. */
-  --color-success: #0f6e56;
-  --color-success-bg: #e1f5ee;
-  --color-success-border: #5dcaa5;
+  /* Succès : bleu marine très foncé (PAS de vert, même teal). Nettement
+     plus sombre que --color-info ci-dessous (contraste de luminosité
+     fort), pour rester distinguable même en niveaux de gris ou en cas de
+     daltonisme sévère, malgré le fait que les deux soient des bleus. */
+  --color-success: #0a2657;
+  --color-success-bg: #e3e8f3;
+  --color-success-border: #4a5f99;
 
-  /* Erreur : rouge à forte luminosité contrastée, tjrs accompagné
-     d'une icône (⚠ ou ✕) dans les composants, jamais seul. */
-  --color-danger: #8c1d1d;
-  --color-danger-bg: #fcebeb;
-  --color-danger-border: #e24b4a;
+  /* Erreur : gris-anthracite très sombre (PAS de rouge). Toujours
+     accompagné d'une icône (⚠ ou ✕) et d'un texte explicite dans les
+     composants, mais la couleur elle-même n'est jamais rouge. */
+  --color-danger: #2b2b28;
+  --color-danger-bg: #eceae5;
+  --color-danger-border: #6b6963;
 
-  /* Avertissement : orange, bien distinct du rouge et du vert  */
+  /* Avertissement : orange, bien distinct du bleu et du gris  */
   --color-warning: #854f0b;
   --color-warning-bg: #faeeda;
   --color-warning-border: #ef9f27;
 
-  /* Information : bleu clair, jamais confondu avec le succès teal
-     grâce à une teinte clairement différente (bleu vs vert-bleu). */
+  /* Information : bleu clair, jamais confondu avec le succès (bleu plus
+     foncé/saturé) grâce à une teinte clairement différente. */
   --color-info: #0c447c;
   --color-info-bg: #e6f1fb;
   --color-info-border: #378add;
@@ -120,6 +121,53 @@
   color: var(--color-neutral-text);
 }
 
+/* Boutons d'action sémantiques (succès/erreur/avertissement), basés sur
+ * la même palette que .app-alert-* ci-dessus. À utiliser à la place de
+ * btn-success/btn-danger/btn-outline-success/btn-outline-danger de
+ * Bootstrap, qui utilisent par défaut un vert et un rouge purs — bannis
+ * ici complètement (règle stricte : ni rouge ni vert nulle part dans
+ * l'app, même seuls). --color-success est un bleu franc, --color-danger
+ * un gris-anthracite très sombre. */
+
+.app-btn-success {
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+  background-color: transparent;
+}
+.app-btn-success:hover:not(:disabled) {
+  background-color: var(--color-success-bg);
+}
+.app-btn-success:disabled {
+  opacity: 0.7;
+}
+
+.app-btn-success-solid {
+  color: #ffffff;
+  border: 1px solid var(--color-success);
+  background-color: var(--color-success);
+}
+.app-btn-success-solid:disabled {
+  opacity: 0.85;
+}
+
+.app-btn-danger {
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-border);
+  background-color: transparent;
+}
+.app-btn-danger:hover:not(:disabled) {
+  background-color: var(--color-danger-bg);
+}
+
+.app-btn-warning {
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+  background-color: transparent;
+}
+.app-btn-warning:hover:not(:disabled) {
+  background-color: var(--color-warning-bg);
+}
+
 /* Focus visible renforcé : indispensable pour la navigation au clavier
  * (encore un critère d'accessibilité, non spécifique au daltonisme mais
  * complémentaire). Le contour de 3px à fort contraste reste visible même
@@ -188,4 +236,37 @@ body.high-contrast .app-alert {
   .app-table-actions {
     flex-wrap: wrap;
   }
+}
+
+/* Neutralise la coloration rouge/vert NATIVE du navigateur sur les
+ * champs de formulaire ayant l'attribut required (ou un type="email"
+ * mal rempli, etc.). Sans cette règle, certains navigateurs (notamment
+ * Firefox) appliquent automatiquement un contour rouge/vert via les
+ * pseudo-classes :invalid/:valid, complètement indépendamment de nos
+ * classes app-*, ce qui réintroduit la paire rouge/vert qu'on évite
+ * partout ailleurs dans l'application. On garde une bordure neutre par
+ * défaut ; l'état réellement invalide reste signalé par le message
+ * app-alert-danger affiché par React (texte explicite + icône ⚠),
+ * jamais par la seule couleur du champ. */
+input:invalid,
+select:invalid,
+textarea:invalid,
+input:valid,
+select:valid,
+textarea:valid {
+  box-shadow: none;
+}
+
+/* Si la personne a déjà essayé de soumettre (classe Bootstrap
+ * "was-validated" sur le <form>), on garde un signal visuel mais avec
+ * nos propres couleurs accessibles plutôt que le rouge/vert natif. */
+.was-validated input:invalid,
+.was-validated select:invalid,
+.was-validated textarea:invalid {
+  border-color: var(--color-danger-border);
+}
+.was-validated input:valid,
+.was-validated select:valid,
+.was-validated textarea:valid {
+  border-color: var(--color-neutral-border);
 }

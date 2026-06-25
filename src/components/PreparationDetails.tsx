@@ -78,7 +78,7 @@ const PreparationDetails: React.FC = () => {
           <span className="app-alert-icon" aria-hidden="true">⚠</span>
           {error}
           <div className="mt-2">
-            <button onClick={() => navigate('/preparations')} className="btn btn-sm btn-outline-danger">
+            <button onClick={() => navigate('/preparations')} className="btn btn-sm app-btn-danger">
               Retour à la liste
             </button>
           </div>
@@ -115,7 +115,7 @@ const PreparationDetails: React.FC = () => {
                 <dd className="col-sm-8">
                   {preparation.formateur ? (
                     <>
-                      {preparation.formateur.name}
+                      {preparation.formateur.displayName}
                       <br />
                       <small className="text-secondary">{preparation.formateur.email}</small>
                     </>
@@ -136,7 +136,7 @@ const PreparationDetails: React.FC = () => {
                 {preparation.createdBy && (
                   <>
                     <dt className="col-sm-4">Créée par</dt>
-                    <dd className="col-sm-8">{preparation.createdBy.name}</dd>
+                    <dd className="col-sm-8">{preparation.createdBy.displayName}</dd>
                   </>
                 )}
               </dl>
@@ -175,7 +175,7 @@ const PreparationDetails: React.FC = () => {
                     >
                       Modifier
                     </Link>
-                    <button className="btn btn-outline-danger me-md-2" onClick={handleDelete}>
+                    <button className="btn app-btn-danger me-md-2" onClick={handleDelete}>
                       Supprimer
                     </button>
                   </>

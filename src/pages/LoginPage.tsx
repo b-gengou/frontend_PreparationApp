@@ -2,9 +2,13 @@
 // backend via le contexte d'authentification (AuthContext), et redirige
 // vers la page d'accueil en cas de succès.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+// Même clef que celle posée par l'intercepteur Axios dans api.ts, juste
+// avant la redirection automatique vers /login suite à un 401.
+const SESSION_EXPIRED_KEY = 'preparationapp_session_expired';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -14,6 +18,23 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  // Distinct de `error` : ce n'est pas une erreur de saisie du formulaire,
+  // juste une info neutre expliquant pourquoi on atterrit sur cette page.
+  // Affiché en bleu (app-alert-info), jamais en rouge, pour ne pas donner
+  // l'impression à la personne qu'elle a fait quelque chose de mal.
+  const [sessionExpired, setSessionExpired] = useState<boolean>(false);
+
+  // Au chargement de la page, on vérifie si l'intercepteur Axios (api.ts)
+  // vient de nous rediriger ici suite à une expiration de session (401).
+  // On supprime le drapeau immédiatement après lecture : sinon le message
+  // réapparaîtrait à chaque rechargement manuel de la page de login, même
+  // longtemps après la déconnexion réelle.
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_EXPIRED_KEY)) {
+      setSessionExpired(true);
+      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+    }
+  }, []);
 
   // Soumission du formulaire de connexion.
 
@@ -21,6 +42,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSessionExpired(false);
 
     try {
       await login(email, password);
@@ -46,13 +68,24 @@ const LoginPage: React.FC = () => {
             <div className="card-body p-4">
               <h1 className="h3 text-center mb-4">Connexion</h1>
 
+              {sessionExpired && (
+                // role="status" (pas "alert") : c'est une info neutre, pas
+                // une erreur urgente — annoncée aux lecteurs d'écran sans
+                // l'intonation "alarme" réservée aux vraies erreurs.
+                <div className="app-alert app-alert-info" role="status">
+                  <span className="app-alert-icon" aria-hidden="true">ℹ</span>
+                  <div>Votre session a expiré. Veuillez vous reconnecter.</div>
+                </div>
+              )}
+
               {error && (
                 // role="alert" : annonce - immédiatement - le message aux lecteurs
                 // d'écran, sans attendre que la personne navigue jusqu'à lui.
                 // L'icône ⚠ renforce visuellement le message sans dépendre
                 // uniquement de la couleur (cf. section accessibilité).
-                <div className="alert alert-danger" role="alert">
-                  <strong>⚠ Erreur : </strong>{error}
+                <div className="app-alert app-alert-danger" role="alert">
+                  <span className="app-alert-icon" aria-hidden="true">⚠</span>
+                  <div><strong>Erreur : </strong>{error}</div>
                 </div>
               )}
 

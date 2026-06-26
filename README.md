@@ -14,7 +14,7 @@ Elle permet de :
  |-----------------|---------------------------|---------------|
  | Backend         | ASP.NET Core              | 10.0          |
  | Base de données | SQL Server                | 2022          |
- | Frontend        | React 			           | 18.x          |
+ | Frontend        | React (TypeScript + Vite) | 18.x          |
  | Authentification| Google OAuth2 + JWT       | -             |
  | API Google      | Calendar API, Sheets API  | v3, v4        |
 

@@ -2,15 +2,15 @@
  * (POST /api/preparations ou PUT /api/preparations/{id}).
  * Champs alignés sur Preparation.cs (backend) : Subject, StartDate, EndDate,
  * Status, FormateurId. Le champ CreatedById n'apparaît jamais dans ce
- * formulaire : il est  -toujours- déterminé par le backend à partir de
+ * formulaire : il est tjrs déterminé par le backend à partir de
  * l'utilisateur connecté (voir PreparationsController.cs, PostPreparation),
  * jamais saisi manuellement, pour éviter qu'une personne ne puisse créer
- * une préparation au nom de quelqu'un d'autre.
- */
+ * une préparation au nom de quelqu'un d'autre. */
  
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/api';
+import { useAuth } from '../context/AuthContext';
 import type { Formateur, PreparationPayload } from '../types/models';
 
 // Les statuts possibles, alignés sur ce que le backend attend dans le
@@ -35,6 +35,7 @@ const toDatetimeLocal = (iso: string): string => {
 const PreparationsForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isEditMode = Boolean(id);
 
   const [formData, setFormData] = useState<PreparationPayload>({
@@ -42,7 +43,12 @@ const PreparationsForm: React.FC = () => {
     startDate: '',
     endDate: '',
     status: 'Upcoming',
-    formateurId: 0,
+    // En mode création, on pré-sélectionne automatiquement l'utilisateur
+    // connecté comme formateur assigné : c'est le cas le plus fréquent
+    // (un formateur crée sa propre préparation), et ça évite l'erreur 400
+    // En mode édition, formateurId est de toute façon réécrasé juste après
+    // par les données réelles de la préparation (voir le useEffect plus bas).
+    formateurId: user?.id ?? 0,
   });
 
   const [formateurs, setFormateurs] = useState<Formateur[]>([]);
@@ -95,8 +101,18 @@ const PreparationsForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    // Filet de sécurité : si formateurId est resté à 0 (ex. : l'utilisateur
+    // connecté n'était pas encore chargé au moment du pré-remplissage),
+    // blocage ici avec un message clair
+	
+    if (!formData.formateurId) {
+      setError('Veuillez sélectionner un formateur.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       if (isEditMode) {

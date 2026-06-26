@@ -1,11 +1,6 @@
 /* Palette de couleurs et règles d'accessibilité centralisées pour
- * PreparationApp.
- * RÈGLE STRICTE DEMANDÉE : aucune couleur rouge ni verte nulle part
- * dans l'application, même seule, même accompagnée d'une icône et d'un
- * texte explicite. Ce n'est pas la version "a minima" du WCAG 1.4.1 (qui
- * tolère une couleur seule si un texte/icône l'accompagne) : ici, le
- * rouge et le vert sont bannis purement et simplement de la palette,
- * remplacés par du bleu, de l'orange et du gris-anthracite foncé. */
+ * PreparationApp. Aucune couleur rouge ni verte nulle part dans
+ * l'application, même seule. Règle stricte par rapport  à la norme  WCAG 1.4.1*/
 
 :root {
   /* Palette sémantique. Ces variables remplacent les couleurs Bootstrap
@@ -16,28 +11,27 @@
   --color-brand: #0d4f8b;
   --color-brand-dark: #073a66;
 
-  /* Succès : bleu marine très foncé (PAS de vert, même teal). Nettement
-     plus sombre que --color-info ci-dessous (contraste de luminosité
-     fort), pour rester distinguable même en niveaux de gris ou en cas de
-     daltonisme sévère, malgré le fait que les deux soient des bleus. */
+  /* Succès : bleu marine très foncé  */
+	 
+	 	 
+	 
   --color-success: #0a2657;
   --color-success-bg: #e3e8f3;
   --color-success-border: #4a5f99;
 
-  /* Erreur : gris-anthracite très sombre (PAS de rouge). Toujours
+  /* Erreur : gris-anthracite très sombre. Toujours
      accompagné d'une icône (⚠ ou ✕) et d'un texte explicite dans les
-     composants, mais la couleur elle-même n'est jamais rouge. */
+     composants, jamais rouge. */
   --color-danger: #2b2b28;
   --color-danger-bg: #eceae5;
   --color-danger-border: #6b6963;
 
-  /* Avertissement : orange, bien distinct du bleu et du gris  */
-  --color-warning: #854f0b;
-  --color-warning-bg: #faeeda;
-  --color-warning-border: #ef9f27;
+  /* Avertissement / action destructrice (Désactiver, Supprimer) : violet foncé.  */
+  --color-warning: #4a2470;
+  --color-warning-bg: #ede6f5;
+  --color-warning-border: #8a5cb8;
 
-  /* Information : bleu clair, jamais confondu avec le succès (bleu plus
-     foncé/saturé) grâce à une teinte clairement différente. */
+  /* Information : bleu clair */
   --color-info: #0c447c;
   --color-info-bg: #e6f1fb;
   --color-info-border: #378add;
@@ -48,7 +42,7 @@
 
   /* Contraste minimum garanti (WCAG AA = ratio 4.5:1 pour le texte normal).
    * Toutes les couleurs, cf. ci-dessus, ont été choisies pour atteindre ce ratio
-   * sur fond blanc. Il ne faut jamais alléger ces teintes sans revérifier le contraste
+   * sur fond blanc. Ne jamais alléger ces teintes sans revérifier le contraste
    * (ex. avec l'outil WebAIM Contrast Checker). */
 }
 
@@ -122,12 +116,7 @@
 }
 
 /* Boutons d'action sémantiques (succès/erreur/avertissement), basés sur
- * la même palette que .app-alert-* ci-dessus. À utiliser à la place de
- * btn-success/btn-danger/btn-outline-success/btn-outline-danger de
- * Bootstrap, qui utilisent par défaut un vert et un rouge purs — bannis
- * ici complètement (règle stricte : ni rouge ni vert nulle part dans
- * l'app, même seuls). --color-success est un bleu franc, --color-danger
- * un gris-anthracite très sombre. */
+ * la même palette que .app-alert-* ci-dessus.  */
 
 .app-btn-success {
   color: var(--color-success);
@@ -168,11 +157,7 @@
   background-color: var(--color-warning-bg);
 }
 
-/* Focus visible renforcé : indispensable pour la navigation au clavier
- * (encore un critère d'accessibilité, non spécifique au daltonisme mais
- * complémentaire). Le contour de 3px à fort contraste reste visible même
- * en cas de daltonisme, contrairement au focus par défaut très fin de
- * certains navigateurs. */
+/* Focus visible renforcé  */
 
 a:focus-visible,
 button:focus-visible,
@@ -184,10 +169,10 @@ textarea:focus-visible,
   outline-offset: 2px;
 }
 
-/* Mode "contraste élevé", activable par la personne (cf. composant
+/* Mode "contraste élevé", activable par les users (cf. composant
  * AccessibilityToggle). Renforce les bordures et fonce le texte, utile pour
  * le daltonisme sévère combiné à une baisse de vue, ou en cas de
- * faible luminosité ambiante (cas plus fréquent).*/
+ * faible luminosité ambiante (cas le + fréquent).*/
 
 body.high-contrast {
   --color-neutral-text: #000000;
@@ -217,8 +202,7 @@ body.high-contrast .app-alert {
   }
 
   /* Les boutons d'action en tableau (Modifier/Supprimer) passent en pleine
-     largeur et s'empilent verticalement plutôt que de se compresser
-     horizontalement : ce qui rend les rends illisibles. */
+     largeur et s'empilent verticalement. */
 	 
   .app-table-actions {
     flex-direction: column;
@@ -238,13 +222,13 @@ body.high-contrast .app-alert {
   }
 }
 
-/* Neutralise la coloration rouge/vert NATIVE du navigateur sur les
+/* Neutralise la coloration rouge/vert native du navigateur sur les
  * champs de formulaire ayant l'attribut required (ou un type="email"
- * mal rempli, etc.). Sans cette règle, certains navigateurs (notamment
- * Firefox) appliquent automatiquement un contour rouge/vert via les
- * pseudo-classes :invalid/:valid, complètement indépendamment de nos
- * classes app-*, ce qui réintroduit la paire rouge/vert qu'on évite
- * partout ailleurs dans l'application. On garde une bordure neutre par
+ * mal rempli, etc.). Sans cette règle, certains navigateurs (dont Firefox)
+ * appliquent automatiquement un contour rouge/vert via les
+ * pseudo-classes :invalid/:valid, complètement indépendamment des
+ * classes app-*, ce qui réintroduit la paire rouge/vert que je veux que l'on évite
+ * partout ailleurs dans l'application. Bordure neutre par
  * défaut ; l'état réellement invalide reste signalé par le message
  * app-alert-danger affiché par React (texte explicite + icône ⚠),
  * jamais par la seule couleur du champ. */
@@ -259,7 +243,7 @@ textarea:valid {
 
 /* Si la personne a déjà essayé de soumettre (classe Bootstrap
  * "was-validated" sur le <form>), on garde un signal visuel mais avec
- * nos propres couleurs accessibles plutôt que le rouge/vert natif. */
+ * mes propres couleurs accessibles plutôt que le rouge/vert natif. */
 .was-validated input:invalid,
 .was-validated select:invalid,
 .was-validated textarea:invalid {

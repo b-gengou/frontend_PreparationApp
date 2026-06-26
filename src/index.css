@@ -12,11 +12,10 @@
   color: #17a2b8 !important; /* Bleu clair */
 }
 
-/* Améliore le contraste pour les daltoniens */
-.high-contrast {
-  background-color: #fff !important;
-  color: #000 !important;
-}
+/* Le style du mode "contraste élevé" (.high-contrast) est défini
+ * de façon ciblée dans styles/accessibility.css (body.high-contrast .card,
+ * .table, .form-control...), et ne doit !!! pas !!! être redéfini ici de façon
+ * globale. */
 
 /* Style pour les liens accessibles */
 a.daltonien-link {

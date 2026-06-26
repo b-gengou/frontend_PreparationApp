@@ -3,8 +3,7 @@
  * visibles uniquement pour le créateur de la préparation ou un administrateur
  * Il s'agit de la même règle que celle appliquée côté backend
  * (PreparationsController.cs). Cacher le bouton ici n'est prévu que pour le confort
- * visuel : la vraie sécurité reste vérifiée par le backend à chaque requête.
- */
+ * visuel : la vraie sécurité reste vérifiée par le backend à chaque requête.  */
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/api';
@@ -33,7 +32,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   );
 };
 
-// Formate une date ISO en format lisible français (ex: "22/06/2026 09:00").
+// Formate une date ISO en format lisible français (ex. : "22/06/2026 09:00").
 const formatDate = (iso: string): string => {
   const date = new Date(iso);
   return date.toLocaleString('fr-BE', {

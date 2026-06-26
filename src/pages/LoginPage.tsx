@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
   // l'impression à la personne qu'elle a fait quelque chose de mal.
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
 
-  // Au chargement de la page, on vérifie si l'intercepteur Axios (api.ts)
+  // Au chargement de la page, vérif. si l'intercepteur Axios (api.ts)
   // vient de nous rediriger ici suite à une expiration de session (401).
   // On supprime le drapeau immédiatement après lecture : sinon le message
   // réapparaîtrait à chaque rechargement manuel de la page de login, même
@@ -143,10 +143,10 @@ const LoginPage: React.FC = () => {
                 </button>
               </form>
 
-              <p className="text-center mt-3 mb-0">
-                Pas encore de compte ?{' '}
-                <Link to="/register">Créer un compte</Link>
-              </p>
+             
+			  
+			  
+			  
             </div>
           </div>
         </div>

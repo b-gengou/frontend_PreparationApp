@@ -1,9 +1,8 @@
 /** Affiche la liste de tous les formateurs (GET /api/formateurs).
- * Accessible à tout utilisateur connecté (formateur ou admin), cela se conforme
- * à la règle de droits définie côté backend (FormateursController.cs).
+ * Accessible à tout utilisateur connecté (formateur ou admin), 
+ * conforme à la règle de droits définie côté backend (FormateursController.cs).
  * Le rôle de chaque formateur est affiché via un badge texte + couleur
- * (jamais la couleur seule), pour rester lisible en cas de daltonisme.
- */
+ * (jamais la couleur seule), pour rester lisible en cas de daltonisme. */
  
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../api/api';
@@ -38,6 +37,10 @@ const FormateursList: React.FC = () => {
   // Id. du formateur en cours de (dés)activation, pour désactiver son
   // bouton pendant l'appel réseau et éviter un double clic.
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  // Id. du formateur dont le rôle est en cours de changement, séparé de
+  // togglingId car les deux actions (statut / rôle) sont indépendantes et
+  // pourraient en théorie être déclenchées presque en même temps.
+  const [togglingRoleId, setTogglingRoleId] = useState<number | null>(null);
 
   // useCallback : isole la fonction de récupération pour pouvoir la
   // rappeler depuis le bouton "Réessayer" sans recharger toute la page
@@ -94,6 +97,37 @@ const FormateursList: React.FC = () => {
       setError(err.response?.data?.Error || `Impossible de ${action === 'deactivate' ? 'désactiver' : 'réactiver'} ce compte.`);
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  // Promeut un formateur en administrateur, ou rétrograde un administrateur
+  // en formateur simple. Voir PUT /api/formateurs/{id}/role (cf.
+  // FormateursController.cs, UpdateRole). Le backend refuse de rétrograder
+  // le dernier adminstrateur actif restant ; dans ce cas, le message
+  // d'erreur renvoyé par le backend est affiché tel quel.
+  const handleToggleRole = async (formateur: Formateur) => {
+    const newRole = formateur.role === '1' ? '2' : '1';
+    const confirmMessage = newRole === '1'
+      ? `Voulez-vous vraiment promouvoir ${formateur.name} au rang d'administrateur ?`
+      : `Voulez-vous vraiment retirer le statut administrateur de ${formateur.name} ?`;
+    if (!window.confirm(confirmMessage)) return;
+
+    setTogglingRoleId(formateur.id);
+    setError(null);
+    try {
+      await api.put(`/formateurs/${formateur.id}/role`, { role: newRole });
+      // On rafraîchit la liste pour refléter le nouveau rôle (badge et
+      // bouton mis à jour).
+      await fetchFormateurs();
+    } catch (err: any) {
+      console.error('Erreur lors du changement de rôle:', err);
+      // Le backend renvoie un message clair si on essaie de rétrograder le
+      // dernier admin actif ("Impossible de retirer le statut
+      // administrateur à ... : il s'agit du dernier administrateur
+      // actif.") — on l'affiche tel quel plutôt qu'un message générique.
+      setError(err.response?.data?.Error || 'Impossible de modifier le rôle de ce formateur.');
+    } finally {
+      setTogglingRoleId(null);
     }
   };
 
@@ -178,15 +212,26 @@ const FormateursList: React.FC = () => {
                   </td>
                   {isAdmin && (
                     <td className="text-center">
-                      <button
-                        className={formateur.isActive ? 'btn btn-sm app-btn-warning' : 'btn btn-sm app-btn-success'}
-                        onClick={() => handleToggleActive(formateur)}
-                        disabled={togglingId === formateur.id}
-                      >
-                        {togglingId === formateur.id
-                          ? '...'
-                          : formateur.isActive ? 'Désactiver' : 'Réactiver'}
-                      </button>
+                      <div className="d-flex flex-column gap-1 app-table-actions">
+                        <button
+                          className={formateur.isActive ? 'btn btn-sm app-btn-warning' : 'btn btn-sm app-btn-success'}
+                          onClick={() => handleToggleActive(formateur)}
+                          disabled={togglingId === formateur.id}
+                        >
+                          {togglingId === formateur.id
+                            ? '...'
+                            : formateur.isActive ? 'Désactiver' : 'Réactiver'}
+                        </button>
+                        <button
+                          className={formateur.role === '1' ? 'btn btn-sm app-btn-warning' : 'btn btn-sm app-btn-success'}
+                          onClick={() => handleToggleRole(formateur)}
+                          disabled={togglingRoleId === formateur.id}
+                        >
+                          {togglingRoleId === formateur.id
+                            ? '...'
+                            : formateur.role === '1' ? 'Rétrograder en formateur' : 'Promouvoir admin'}
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>
